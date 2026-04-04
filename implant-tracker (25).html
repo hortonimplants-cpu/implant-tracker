@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ImplantLog">
+<meta name="mobile-web-app-capable" content="yes">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ImplantLog v2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  background: #F2F2F7;
+  color: #000;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* PAGE = one visible at a time */
+.page { display: none; padding-bottom: 80px; }
+.page.active { display: block; }
+
+/* NAV BAR */
+.nav {
+  background: rgba(242,242,247,0.95);
+  border-bottom: 1px solid #C6C6C8;
+  padding: 12px 16px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.nav-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.nav-subtitle { font-size: 13px; color: #666; margin-top: 2px; }
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-back {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  padding: 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+}
+.nav-center { font-size: 17px; font-weight: 600; flex: 1; text-align: center; }
+.nav-save {
+  background: none;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 4px 0;
+  cursor: pointer;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+}
+
+/* TAB BAR */
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(242,242,247,0.97);
+  border-top: 1px solid #C6C6C8;
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 20;
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 4px;
+  cursor: pointer;
+  gap: 2px;
+  border: none;
+  background: none;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab span { font-size: 10px; font-weight: 500; color: #8E8E93; }
+.tab.on span { color: #007AFF; }
+.tab.on svg { stroke: #007AFF !important; }
+.tab svg { stroke: #8E8E93; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* GROUPED CARDS */
+.section-label {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 18px 20px 6px;
+}
+.card {
+  background: #fff;
+  margin: 0 16px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cell {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(60,60,67,0.18);
+  gap: 12px;
+  background: #fff;
+}
+.cell:last-child { border-bottom: none; }
+.cell-label { font-size: 17px; color: #000; flex: 1; }
+.cell-value { font-size: 17px; color: #666; text-align: right; }
+.cell-arrow { font-size: 14px; color: #C7C7CC; }
+.cell.tap { cursor: pointer; }
+.cell.tap:active { background: #F2F2F7; }
+.cell.red .cell-label { color: #FF3B30; }
+
+/* FORM FIELDS */
+.field {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(60,60,67,0.18);
+  background: #fff;
+  gap: 10px;
+}
+.field:last-child { border-bottom: none; }
+.field-label {
+  font-size: 15px;
+  color: #000;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+.field-label.req::after { content: " *"; color: #FF3B30; }
+.field input, .field select {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  color: #000;
+  text-align: right;
+  min-width: 0;
+  -webkit-appearance: none;
+}
+.field input::placeholder { color: #C7C7CC; }
+.field select { color: #007AFF; cursor: pointer; }
+.field select option { color: #000; }
+.field.tall { align-items: flex-start; padding: 12px 16px; }
+.field.tall .field-label { padding-top: 2px; }
+.field textarea {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 15px;
+  color: #000;
+  resize: none;
+  min-height: 72px;
+  -webkit-appearance: none;
+}
+.field textarea::placeholder { color: #C7C7CC; }
+
+/* TOGGLE */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid rgba(60,60,67,0.18);
+  gap: 12px;
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-text { flex: 1; }
+.toggle-title { font-size: 17px; color: #000; }
+.toggle-sub { font-size: 12px; color: #8E8E93; margin-top: 1px; }
+.switch { position: relative; width: 51px; height: 31px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: #E5E5EA;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.switch input:checked + .switch-track { background: #34C759; }
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.22s;
+  pointer-events: none;
+}
+.switch input:checked ~ .switch-thumb { transform: translateX(20px); }
+
+/* IMPLANT LIST ITEMS */
+.implant-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(60,60,67,0.18);
+  background: #fff;
+  cursor: pointer;
+  gap: 12px;
+}
+.implant-row:last-child { border-bottom: none; }
+.implant-row:active { background: #F2F2F7; }
+.tooth-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #E8F4FF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tooth-icon.grafted { background: #E8F9EE; }
+.tooth-emoji { font-size: 18px; line-height: 1; }
+.tooth-code { font-size: 9px; font-weight: 700; color: #007AFF; letter-spacing: 0.03em; margin-top: 1px; }
+.tooth-icon.grafted .tooth-code { color: #34C759; }
+.implant-info { flex: 1; min-width: 0; }
+.implant-name { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.implant-mfr { font-size: 14px; color: #666; margin-top: 1px; }
+.implant-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+.tag-blue { background: #E8F4FF; color: #007AFF; }
+.tag-green { background: #E8F9EE; color: #34C759; }
+.tag-purple { background: #F0EEFF; color: #5856D6; }
+.implant-date { font-size: 12px; color: #8E8E93; margin-top: 3px; }
+.implant-chevron { font-size: 16px; color: #C7C7CC; flex-shrink: 0; }
+
+/* STAT STRIP */
+.stat-strip { display: flex; gap: 8px; padding: 16px 16px 4px; overflow-x: auto; }
+.stat-strip::-webkit-scrollbar { display: none; }
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.stat-num { font-size: 26px; font-weight: 700; color: #007AFF; line-height: 1; }
+.stat-lbl { font-size: 12px; color: #8E8E93; margin-top: 3px; }
+
+/* SEARCH */
+.search-wrap { padding: 8px 16px; }
+.search-box {
+  background: rgba(120,120,128,0.16);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+}
+.search-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  color: #000;
+}
+.search-box input::placeholder { color: #8E8E93; }
+.search-ico { font-size: 14px; color: #8E8E93; }
+
+/* EMPTY STATE */
+.empty {
+  text-align: center;
+  padding: 60px 32px;
+}
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+.empty-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.empty-text { font-size: 15px; color: #666; line-height: 1.5; }
+
+/* ADD BUTTON */
+.fab {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+  right: 20px;
+  width: 54px;
+  height: 54px;
+  border-radius: 27px;
+  background: #007AFF;
+  color: #fff;
+  border: none;
+  font-size: 30px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+  z-index: 15;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+}
+.fab:active { opacity: 0.8; }
+
+/* DETAIL HERO */
+.hero {
+  background: #007AFF;
+  margin: 16px 16px 0;
+  border-radius: 16px;
+  padding: 20px;
+  color: #fff;
+}
+.hero.grafted { background: linear-gradient(135deg, #1B7F38, #34C759); }
+.hero-pre { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; margin-bottom: 4px; }
+.hero-name { font-size: 22px; font-weight: 700; line-height: 1.2; margin-bottom: 3px; }
+.hero-mfr { font-size: 14px; opacity: 0.85; }
+.hero-graft { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+.hero-date { font-size: 13px; opacity: 0.65; margin-top: 10px; }
+
+/* SECTION SUB-HEADER */
+.sub-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34C759;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 16px 4px;
+  background: #fff;
+  border-bottom: 1px solid rgba(60,60,67,0.18);
+}
+
+/* TOOTH CHART */
+.chart-card {
+  background: #fff;
+  margin: 0 16px;
+  border-radius: 12px;
+  padding: 14px;
+}
+.arch-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8E8E93;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.arch-row { display: flex; justify-content: center; gap: 2px; }
+.arch-sep { height: 1px; background: #C6C6C8; margin: 10px 0; }
+.tbtn {
+  width: 22px;
+  height: 28px;
+  border-radius: 5px;
+  background: rgba(120,120,128,0.12);
+  border: none;
+  font-size: 8px;
+  font-weight: 700;
+  color: #8E8E93;
+  cursor: pointer;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  flex-shrink: 0;
+}
+.tbtn:active { opacity: 0.6; }
+.tbtn.imp { background: #E8F4FF; color: #007AFF; }
+.tbtn.graft { background: #E8F9EE; color: #34C759; }
+.tbtn.sel { background: #007AFF; color: #fff; }
+.chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* PROFILE AVATAR */
+.profile-header {
+  text-align: center;
+  padding: 24px 16px 8px;
+}
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 36px;
+  background: #E8F4FF;
+  border: 2px solid #007AFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 10px;
+}
+.profile-name { font-size: 20px; font-weight: 600; }
+.profile-sub { font-size: 14px; color: #666; margin-top: 2px; }
+
+/* BUTTONS */
+.btn-primary {
+  display: block;
+  margin: 16px 16px 0;
+  background: #007AFF;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  cursor: pointer;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+.btn-primary:active { opacity: 0.8; }
+.btn-danger {
+  display: block;
+  margin: 8px 16px 0;
+  background: rgba(255,59,48,0.1);
+  color: #FF3B30;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 500;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  cursor: pointer;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+.btn-danger:active { opacity: 0.7; }
+.btn-secondary {
+  display: block;
+  margin: 8px 16px 0;
+  background: rgba(0,122,255,0.08);
+  color: #007AFF;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 500;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  cursor: pointer;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+.btn-secondary:active { opacity: 0.7; }
+
+/* CALLOUT */
+.callout {
+  background: #007AFF;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin: 8px 16px 0;
+  display: none;
+}
+.callout.show { display: block; }
+
+
+/* PATIENT LIST */
+.pt-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(60,60,67,0.18);background:#fff;cursor:pointer;gap:12px}
+.pt-row:last-child{border-bottom:none}
+.pt-row:active{background:#F2F2F7}
+.pt-av{width:40px;height:40px;border-radius:20px;background:#E8F4FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#007AFF;flex-shrink:0}
+.pt-info{flex:1;min-width:0}
+.pt-name{font-size:17px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-meta{font-size:13px;color:#666;margin-top:1px}
+.pt-badge{background:#007AFF;color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:600;flex-shrink:0}
+.pt-chev{font-size:16px;color:#C7C7CC;flex-shrink:0;margin-left:4px}
+
+/* BARCODE SCANNER */
+.scan-modal{display:none;position:fixed;inset:0;background:#000;z-index:200;flex-direction:column}
+.scan-modal.open{display:flex}
+.scan-header{display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:calc(env(safe-area-inset-top,0px) + 16px);flex-shrink:0}
+.scan-header-title{font-size:17px;font-weight:600;color:#fff}
+.scan-cancel-btn{color:#007AFF;font-size:17px;background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0}
+.scan-video-wrap{flex:1;position:relative;overflow:hidden}
+.scan-video-wrap video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-guide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.scan-box{width:240px;height:240px;position:relative}
+.scan-box::before{content:'';position:absolute;inset:0;border:2px solid rgba(255,255,255,0.3);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+.scan-corner{position:absolute;width:28px;height:28px;border-color:#fff;border-style:solid}
+.sc-tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.sc-tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.sc-bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.sc-br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.scan-laser{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#007AFF 20%,#007AFF 80%,transparent);border-radius:1px;animation:laser 2s ease-in-out infinite;box-shadow:0 0 6px #007AFF}
+@keyframes laser{0%,100%{top:8px;opacity:1}49%{opacity:1}50%{top:calc(100% - 10px);opacity:1}51%{opacity:0.7}}
+.scan-hint{margin-top:20px;color:rgba(255,255,255,0.7);font-size:14px;text-align:center;padding:0 32px;line-height:1.5}
+.scan-bottom{flex-shrink:0;padding:20px 16px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;background:#111}
+.scan-status{font-size:14px;color:rgba(255,255,255,0.6);text-align:center;min-height:20px}
+.scan-status.found{color:#34C759;font-weight:600}
+.scan-native-btn{background:#1C1C1E;border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:15px;font-weight:500;padding:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
+.scan-native-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}
+.scan-manual-toggle{background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:inherit;padding:4px}
+.scan-paste-row{display:flex;gap:8px}
+.scan-paste-input{flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:15px;padding:11px 13px;font-family:inherit;outline:none;-webkit-appearance:none}
+.scan-paste-input::placeholder{color:rgba(255,255,255,0.35)}
+.scan-paste-ok{background:#007AFF;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;padding:11px 18px;cursor:pointer;font-family:inherit}
+/* SCAN ROW - prominent tappable row */
+.scan-row{display:flex;align-items:center;gap:12px;padding:13px 16px;background:#EAF4FF;border-bottom:1px solid rgba(60,60,67,0.18);cursor:pointer;-webkit-user-select:none;user-select:none}
+.scan-row:last-child{border-bottom:none}
+.scan-row:active{background:#D4E9FF}
+.scan-row-ico{font-size:20px;line-height:1;flex-shrink:0}
+.scan-row-txt{flex:1;font-size:16px;font-weight:500;color:#007AFF;letter-spacing:-0.2px}
+.scan-row-chev{font-size:16px;color:#007AFF;opacity:0.5}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(40,40,40,0.9);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.gap { height: 24px; }
+
+/* STOCK FILTER PILLS */
+.stock-filter{background:rgba(120,120,128,0.12);border:none;border-radius:16px;padding:6px 14px;font-size:14px;font-weight:500;color:#666;cursor:pointer;white-space:nowrap;font-family:-apple-system,"Helvetica Neue",sans-serif}
+.stock-filter.on{background:#007AFF;color:#fff}
+.stock-filter:active{opacity:0.7}
+
+/* STOCK ITEM CARD */
+.stock-item{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(60,60,67,0.18);background:#fff;cursor:pointer;gap:12px}
+.stock-item:last-child{border-bottom:none}
+.stock-item:active{background:#F2F2F7}
+.stock-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.stock-info{flex:1;min-width:0}
+.stock-name{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-meta{font-size:13px;color:#666;margin-top:1px}
+.stock-right{text-align:right;flex-shrink:0}
+.stock-qty{font-size:22px;font-weight:700;line-height:1}
+.stock-unit{font-size:11px;color:#8E8E93;margin-top:1px}
+.stock-low{color:#FF3B30}
+.stock-ok{color:#34C759}
+.stock-warn{color:#FF9500}
+
+/* ADJUST STEPPER */
+.adj-card{background:#fff;margin:16px 16px 0;border-radius:12px;padding:20px;text-align:center}
+.adj-name{font-size:18px;font-weight:600;margin-bottom:4px}
+.adj-current{font-size:14px;color:#666;margin-bottom:20px}
+.adj-stepper{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:16px}
+.adj-btn{width:48px;height:48px;border-radius:24px;background:#F2F2F7;border:none;font-size:26px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Helvetica Neue",sans-serif}
+.adj-btn:active{background:#E5E5EA}
+.adj-num{font-size:48px;font-weight:700;min-width:80px;text-align:center;color:#007AFF}
+.adj-reason{margin:0 16px 0}
+
+/* INTRO SCREEN */
+.intro-page{display:none;min-height:100vh;background:#007AFF;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 32px;position:relative;z-index:50}
+.intro-page.active{display:flex}
+.intro-hidden{display:none !important}
+.intro-logo{width:80px;height:80px;border-radius:22px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 28px}
+.intro-brand{font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:10px}
+.intro-title{font-size:32px;font-weight:700;color:#fff;letter-spacing:-0.5px;line-height:1.15;margin-bottom:8px}
+.intro-sub{font-size:16px;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:56px}
+.intro-btn{background:#fff;color:#007AFF;border:none;border-radius:16px;padding:18px 48px;font-size:18px;font-weight:700;font-family:-apple-system,"Helvetica Neue",sans-serif;cursor:pointer;letter-spacing:0.04em;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.intro-btn:active{opacity:0.85;transform:scale(0.97)}
+</style>
+</head>
+<body>
+
+<!-- ═══ INTRO SCREEN ══════════════════════════════ -->
+<div id="page-intro" class="intro-page active">
+  <div class="intro-logo">🦷</div>
+  <div class="intro-brand">Pure Implant Health</div>
+  <div class="intro-title">Implant Tracker</div>
+  <div class="intro-sub">Record, manage and track implant placements for every patient, every visit.</div>
+  <button class="intro-btn" onclick="startApp()">TRACK</button>
+</div>
+
+<!-- ═══ PAGE: PATIENTS LIST ══════════════════════ -->
+<div id="page-patients" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <div style="flex:1">
+        <div class="nav-title">Patients</div>
+        <div class="nav-subtitle" id="pts-sub">Loading…</div>
+      </div>
+      <button class="nav-save" onclick="openEditPatient(null)">+ New</button>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-ico">&#x2315;</span>
+      <input type="text" id="pts-search" placeholder="Search patients…" oninput="renderPatients()">
+    </div>
+  </div>
+  <div id="pts-list" style="margin:8px 0"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: HOME (patient records) ═════════════ -->
+<div id="page-home" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="goToPatients()">&#x2039; Patients</button>
+      <span class="nav-center" id="home-patient-name">Records</span>
+    </div>
+  </div>
+  <div id="home-pt-info" style="margin:10px 16px 0"></div>
+  <div class="stat-strip" id="stat-strip"></div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-ico">&#x2315;</span>
+      <input type="text" id="search-in" placeholder="Search records…" oninput="doSearch()">
+    </div>
+  </div>
+  <div id="home-sub" style="display:none"></div>
+  <div id="home-list" style="margin:8px 0"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: PATIENT ADD/EDIT ════════════════════ -->
+<div id="page-patient-edit" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" id="pt-edit-back" onclick="closePatientEdit()">&#x2039; Patients</button>
+      <span class="nav-center" id="pt-edit-title">New Patient</span>
+      <button class="nav-save" onclick="savePatient()">Save</button>
+    </div>
+  </div>
+  <input type="hidden" id="pe-id">
+  <div class="section-label">Patient details</div>
+  <div class="card">
+    <div class="field"><span class="field-label req">Full name</span><input type="text" id="pe-name" placeholder="e.g. Jane Smith"></div>
+    <div class="field"><span class="field-label">Date of birth</span><input type="date" id="pe-dob"></div>
+    <div class="field"><span class="field-label">Patient ID</span><input type="text" id="pe-ptid" placeholder="e.g. PT-00142"></div>
+    <div class="field"><span class="field-label">Phone</span><input type="tel" id="pe-phone" placeholder="Optional"></div>
+    <div class="field tall"><span class="field-label">Allergies / notes</span><textarea id="pe-notes" placeholder="e.g. Penicillin allergy, metal sensitivity…"></textarea></div>
+  </div>
+  <button class="btn-primary" onclick="savePatient()">Save Patient</button>
+  <button class="btn-danger" id="pe-delete-btn" style="display:none" onclick="deletePatient()">Delete Patient &amp; All Records</button>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: CHART ══════════════════════════════ -->
+<div id="page-chart" class="page">
+  <div class="nav">
+    <div class="nav-title">Tooth Chart</div>
+    <div class="nav-subtitle">Tap a tooth to view details</div>
+  </div>
+  <div style="padding:12px 16px">
+    <div style="background:#E8F4FF;border-radius:10px;padding:10px 14px;font-size:14px;color:#007AFF;line-height:1.5">
+      Highlighted teeth have implant records. Tap any tooth to see details.
+    </div>
+  </div>
+  <div class="chart-card" id="main-chart"></div>
+  <div id="chart-detail" style="margin-top:8px"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: PROFILE (patient profile) ══════════ -->
+<div id="page-profile" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <div style="flex:1"><div class="nav-title" id="prof-page-name">Patient</div><div class="nav-subtitle" id="prof-page-sub"></div></div>
+      <button class="nav-save" onclick="openEditPatient(curPatientId)">Edit</button>
+    </div>
+  </div>
+  <div id="prof-detail-card" style="margin:12px 16px 0"></div>
+  <div class="section-label">Patient data</div>
+  <div class="card">
+    <div class="cell tap" onclick="exportData()">
+      <span class="cell-label">Export patient CSV</span>
+      <span class="cell-arrow">›</span>
+    </div>
+    <div class="cell tap red" onclick="clearPatient()">
+      <span class="cell-label">Clear this patient's records</span>
+      <span class="cell-arrow">›</span>
+    </div>
+  </div>
+  <div class="section-label">App data</div>
+  <div class="card">
+    <div class="cell tap" onclick="exportAllData()">
+      <span class="cell-label">Export all patients CSV</span>
+      <span class="cell-arrow">›</span>
+    </div>
+    <div class="cell tap red" onclick="clearAll()">
+      <span class="cell-label">Clear all data</span>
+      <span class="cell-arrow">›</span>
+    </div>
+  </div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: ADD ════════════════════════════════ -->
+<div id="page-add" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="showPage('home')">‹ Cancel</button>
+      <span class="nav-center">New Record</span>
+      <button class="nav-save" onclick="saveRecord(false)">Save</button>
+    </div>
+  </div>
+
+  <div class="section-label">Tooth site <span style="color:#FF3B30">*</span></div>
+  <div class="chart-card" id="picker-chart"></div>
+  <div class="callout" id="sel-callout"></div>
+  <div style="margin-top:8px">
+    <div class="card">
+      <div class="field">
+        <span class="field-label">Description</span>
+        <input type="text" id="f-site" placeholder="e.g. Upper right molar">
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Implant details</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label req">Manufacturer</span>
+      <select id="f-mfr">
+        <option value="">Select…</option>
+        <option>Straumann</option><option>Nobel Biocare</option>
+        <option>Dentsply Sirona</option><option>Zimmer Biomet</option>
+        <option>BioHorizons</option><option>Osstem</option>
+        <option>MegaGen</option><option>Neodent</option>
+        <option>Anthogyr</option><option>Bredent</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="field-label">System</span>
+      <input type="text" id="f-sys" placeholder="e.g. Bone Level Tapered">
+    </div>
+    <div class="field">
+      <span class="field-label req">Lot number</span>
+      <input type="text" id="f-lot" placeholder="Required">
+    </div>
+    <div class="scan-row" onclick="openScanner('implant')">
+      <span class="scan-row-ico">&#x1F4F7;</span>
+      <span class="scan-row-txt">Scan implant barcode</span>
+      <span class="scan-row-chev">&#x203A;</span>
+    </div>
+    <div class="field">
+      <span class="field-label">Reference no.</span>
+      <input type="text" id="f-ref" placeholder="Optional">
+    </div>
+    <div class="field">
+      <span class="field-label">Diameter mm</span>
+      <input type="number" id="f-dia" placeholder="e.g. 4.1" step="0.1" min="2" max="7">
+    </div>
+    <div class="field">
+      <span class="field-label">Length mm</span>
+      <input type="number" id="f-len" placeholder="e.g. 10" step="0.5" min="4" max="20">
+    </div>
+    <div class="field">
+      <span class="field-label req">Date placed</span>
+      <input type="date" id="f-date">
+    </div>
+  </div>
+
+  <div class="section-label">Practice &amp; clinician</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label req">Practice</span>
+      <select id="f-prac" style="color:#007AFF;-webkit-appearance:none;flex:1;border:none;background:none;outline:none;font-family:inherit;font-size:16px;text-align:right;cursor:pointer">
+        <option value="">Select practice…</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="field-label">Clinician</span>
+      <input type="text" id="f-clin" placeholder="Dr Name">
+    </div>
+  </div>
+
+  <div class="section-label">Bone graft</div>
+  <div class="card">
+    <div class="toggle-row">
+      <div class="toggle-text">
+        <div class="toggle-title">Graft performed?</div>
+        <div class="toggle-sub">Bone augmentation at this site</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="f-gon" onchange="toggleGraft()">
+        <div class="switch-track"></div>
+        <div class="switch-thumb"></div>
+      </label>
+    </div>
+  </div>
+
+  <div id="graft-section" style="display:none">
+    <div class="section-label">Graft type</div>
+    <div class="card">
+      <div class="field">
+        <span class="field-label">Type</span>
+        <select id="f-gtyp">
+          <option value="">Select…</option>
+          <option>Socket preservation</option>
+          <option>Ridge augmentation</option>
+          <option>Sinus lift — crestal</option>
+          <option>Sinus lift — lateral window</option>
+          <option>GBR (Guided Bone Regeneration)</option>
+          <option>Split crest / Ridge expansion</option>
+          <option>Block bone graft</option>
+          <option>Immediate implant with graft</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">Bone material</div>
+    <div class="card">
+      <div class="field">
+        <span class="field-label">Material</span>
+        <select id="f-bmat">
+          <option value="">Select…</option>
+          <option>Autograft (own bone)</option>
+          <option>Allograft (donor bone)</option>
+          <option>Xenograft — bovine</option>
+          <option>Xenograft — porcine</option>
+          <option>Alloplast (synthetic)</option>
+          <option>Combination / mixed</option>
+          <option>None used</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="field-label">Product</span>
+        <input type="text" id="f-bprod" placeholder="e.g. Geistlich Bio-Oss">
+      </div>
+      <div class="field">
+        <span class="field-label">Lot number</span>
+        <input type="text" id="f-blot" placeholder="Optional">
+      </div>
+      <div class="scan-row" onclick="openScanner('bone')">
+        <span class="scan-row-ico">&#x1F4F7;</span>
+        <span class="scan-row-txt">Scan bone graft barcode</span>
+        <span class="scan-row-chev">&#x203A;</span>
+      </div>
+      <div class="field">
+        <span class="field-label">Reference no.</span>
+        <input type="text" id="f-bref" placeholder="Optional">
+      </div>
+    </div>
+
+    <div class="section-label">Membrane</div>
+    <div class="card">
+      <div class="toggle-row">
+        <div class="toggle-text">
+          <div class="toggle-title">Membrane used?</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="f-mon" onchange="toggleMem()">
+          <div class="switch-track"></div>
+          <div class="switch-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <div id="mem-section" style="display:none">
+      <div class="card" style="margin-top:0;border-radius:0 0 12px 12px">
+        <div class="field">
+          <span class="field-label">Type</span>
+          <select id="f-mtyp">
+            <option value="">Select…</option>
+            <option>Resorbable — collagen</option>
+            <option>Resorbable — synthetic</option>
+            <option>Non-resorbable — PTFE</option>
+            <option>Non-resorbable — Ti mesh</option>
+            <option>PRF / L-PRF membrane</option>
+          </select>
+        </div>
+        <div class="field">
+          <span class="field-label">Product</span>
+          <input type="text" id="f-mprod" placeholder="e.g. Bio-Gide">
+        </div>
+        <div class="field">
+          <span class="field-label">Lot number</span>
+          <input type="text" id="f-mlot" placeholder="Optional">
+        </div>
+        <div class="scan-row" onclick="openScanner('membrane')">
+          <span class="scan-row-ico">&#x1F4F7;</span>
+          <span class="scan-row-txt">Scan membrane barcode</span>
+          <span class="scan-row-chev">&#x203A;</span>
+        </div>
+        <div class="field">
+          <span class="field-label">Reference no.</span>
+          <input type="text" id="f-mref" placeholder="Optional">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Graft notes</div>
+    <div class="card">
+      <div class="field tall">
+        <textarea id="f-gnotes" placeholder="e.g. 0.5cc Bio-Oss with PRF, primary closure achieved…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Restoration</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label">Crown type</span>
+      <select id="f-crown">
+        <option value="">None yet</option>
+        <option>Porcelain fused to metal</option>
+        <option>Zirconia crown</option>
+        <option>All-ceramic crown</option>
+        <option>Implant-retained bridge</option>
+        <option>All-on-4 / Full arch</option>
+        <option>Locator overdenture</option>
+        <option>Healing cap</option>
+      </select>
+    </div>
+    <div class="field tall">
+      <span class="field-label">Notes</span>
+      <textarea id="f-notes" placeholder="ISQ readings, complications, follow-up dates…"></textarea>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="saveRecord(false)">Save Implant Record</button>
+  <button class="btn-secondary" onclick="saveRecord(true)">+ Save &amp; add another from this visit</button>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: DETAIL ═════════════════════════════ -->
+<div id="page-detail" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="showPage('home')">‹ Records</button>
+      <span class="nav-center" id="det-nav-title">Implant</span>
+      <span style="min-width:60px"></span>
+    </div>
+  </div>
+  <div id="det-body"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: PRACTICES LIST ════════════════════ -->
+<div id="page-practices" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <div style="flex:1">
+        <div class="nav-title">Practices</div>
+        <div class="nav-subtitle" id="pracs-sub">Where implants are placed</div>
+      </div>
+      <button class="nav-save" onclick="openAddPractice(null)">+ Add</button>
+    </div>
+  </div>
+  <div id="practices-list" style="margin:8px 0"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: PRACTICE ADD/EDIT ════════════════ -->
+<div id="page-practice-edit" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="switchTab('practices')">&#x2039; Practices</button>
+      <span class="nav-center" id="prac-edit-title">Add Practice</span>
+      <button class="nav-save" onclick="savePractice()">Save</button>
+    </div>
+  </div>
+  <input type="hidden" id="prace-id">
+  <div class="section-label">Practice details</div>
+  <div class="card">
+    <div class="field"><span class="field-label req">Practice name</span><input type="text" id="prace-name" placeholder="e.g. Pure Implant Health"></div>
+    <div class="field"><span class="field-label">Clinician</span><input type="text" id="prace-clin" placeholder="e.g. Dr K Phillips"></div>
+    <div class="field"><span class="field-label">Address</span><input type="text" id="prace-addr" placeholder="Street, City"></div>
+    <div class="field"><span class="field-label">Phone</span><input type="tel" id="prace-phone" placeholder="Optional"></div>
+  </div>
+  <button class="btn-primary" onclick="savePractice()">Save Practice</button>
+  <button class="btn-danger" id="prace-delete-btn" style="display:none" onclick="deletePractice()">Delete Practice</button>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: STOCK ═══════════════════════════════ -->
+<div id="page-stock" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <div class="nav-title" style="flex:1">My Supplies</div>
+      <button class="nav-save" onclick="openStockEdit(null)">+ Add</button>
+    </div>
+    <div class="nav-subtitle" id="stock-sub">Your implant materials</div>
+  </div>
+
+  <!-- Low stock alert banner - hidden unless needed -->
+  <div id="low-stock-banner" style="display:none;margin:12px 16px 0;background:#FFF0F0;border:1px solid #FF9500;border-radius:10px;padding:10px 14px;font-size:14px;color:#7A3000;line-height:1.5"></div>
+
+  <!-- Category filter -->
+  <div style="display:flex;gap:8px;padding:12px 16px 4px;overflow-x:auto">
+    <button class="stock-filter on" id="sf-all" onclick="filterStock('all')">All</button>
+    <button class="stock-filter" id="sf-implant" onclick="filterStock('implant')">Implants</button>
+    <button class="stock-filter" id="sf-bone" onclick="filterStock('bone')">Bone graft</button>
+    <button class="stock-filter" id="sf-membrane" onclick="filterStock('membrane')">Membranes</button>
+    <button class="stock-filter" id="sf-other" onclick="filterStock('other')">Other</button>
+  </div>
+
+  <div id="stock-list" style="margin-top:8px"></div>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: STOCK ADD/EDIT ═══════════════════ -->
+<div id="page-stock-edit" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="switchTab('stock')">‹ Supplies</button>
+      <span class="nav-center" id="stock-edit-title">Add Supply</span>
+      <button class="nav-save" onclick="saveStockItem()">Save</button>
+    </div>
+  </div>
+  <input type="hidden" id="se-id">
+
+  <div class="section-label">Item details</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label req">Category</span>
+      <select id="se-cat" onchange="updateStockEditHints()">
+        <option value="">Select…</option>
+        <option value="implant">Implant component</option>
+        <option value="bone">Bone graft material</option>
+        <option value="membrane">Membrane</option>
+        <option value="other">Other / consumable</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="field-label req">Name</span>
+      <input type="text" id="se-name" placeholder="e.g. Straumann BL Tapered NC 4.1×10">
+    </div>
+    <div class="field">
+      <span class="field-label">Manufacturer</span>
+      <input type="text" id="se-mfr" placeholder="e.g. Straumann">
+    </div>
+    <div class="field">
+      <span class="field-label">Reference no.</span>
+      <input type="text" id="se-ref" placeholder="e.g. 021.4611">
+    </div>
+  </div>
+
+  <div class="section-label">Quantities</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label req">Current qty</span>
+      <input type="number" id="se-qty" placeholder="0" min="0" step="1">
+    </div>
+    <div class="field">
+      <span class="field-label">Alert below</span>
+      <input type="number" id="se-low" placeholder="e.g. 2" min="0" step="1">
+    </div>
+    <div class="field">
+      <span class="field-label">Unit</span>
+      <input type="text" id="se-unit" placeholder="e.g. units, cc, pack">
+    </div>
+  </div>
+
+  <div class="section-label">Lot &amp; expiry</div>
+  <div class="card">
+    <div class="field">
+      <span class="field-label">Lot number</span>
+      <input type="text" id="se-lot" placeholder="Optional">
+    </div>
+    <div class="scan-row" onclick="openScanner('stock')">
+      <span class="scan-row-ico">&#x1F4F7;</span>
+      <span class="scan-row-txt">Scan supply barcode</span>
+      <span class="scan-row-chev">&#x203A;</span>
+    </div>
+    <div class="field">
+      <span class="field-label">Expiry date</span>
+      <input type="date" id="se-expiry">
+    </div>
+    <div class="field">
+      <span class="field-label">Location</span>
+      <input type="text" id="se-loc" placeholder="e.g. Fridge, Cabinet 3">
+    </div>
+    <div class="field">
+      <span class="field-label">Notes</span>
+      <input type="text" id="se-notes" placeholder="Optional">
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="saveStockItem()">Save Supply</button>
+  <button class="btn-danger" id="se-delete-btn" onclick="deleteStockItem()" style="display:none">Delete Item</button>
+  <div class="gap"></div>
+</div>
+
+<!-- ═══ PAGE: STOCK ADJUST ════════════════════ -->
+<div id="page-stock-adjust" class="page">
+  <div class="nav">
+    <div class="nav-row">
+      <button class="nav-back" onclick="switchTab('stock')">‹ Supplies</button>
+      <span class="nav-center">Adjust Quantity</span>
+      <button class="nav-save" onclick="applyAdjust()">Done</button>
+    </div>
+  </div>
+  <input type="hidden" id="adj-id">
+  <div id="adj-body"></div>
+  <div class="gap"></div>
+</div>
+
+<nav class="tabs intro-hidden" id="main-tabs">
+  <button class="tab on" id="tab-home" onclick="switchTab('home')">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+    <span>Records</span>
+  </button>
+  <button class="tab" id="tab-chart" onclick="switchTab('chart')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
+    <span>Chart</span>
+  </button>
+  <button class="tab" id="tab-practices" onclick="switchTab('practices')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Practices</span>
+  </button>
+  <button class="tab" id="tab-stock" onclick="switchTab('stock')">
+    <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    <span>Supplies</span>
+  </button>
+  <button class="tab" id="tab-profile" onclick="switchTab('profile')">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </button>
+</nav>
+
+<!-- FAB -->
+<button class="fab intro-hidden" id="fab" onclick="curTab==='stock'?openStockEdit(null):curTab==='practices'?openAddPractice(null):openAdd()">+</button>
+
+<!-- BARCODE / QR ENTRY MODAL -->
+<div class="scan-modal" id="scan-modal">
+  <!-- Header -->
+  <div class="scan-header">
+    <div style="width:60px"></div>
+    <div class="scan-header-title" id="scan-title">Scan Barcode</div>
+    <button class="scan-cancel-btn" onclick="closeScanner()">Cancel</button>
+  </div>
+  <!-- Camera feed -->
+  <div class="scan-video-wrap">
+    <video id="scan-video" autoplay playsinline muted></video>
+    <div class="scan-guide">
+      <div class="scan-box">
+        <div class="scan-corner sc-tl"></div>
+        <div class="scan-corner sc-tr"></div>
+        <div class="scan-corner sc-bl"></div>
+        <div class="scan-corner sc-br"></div>
+        <div class="scan-laser"></div>
+      </div>
+      <div class="scan-hint">Hold steady — align barcode within the frame</div>
+    </div>
+  </div>
+  <!-- Bottom controls -->
+  <div class="scan-bottom">
+    <div class="scan-status" id="scan-status">Scanning…</div>
+    <!-- Native iOS capture fallback -->
+    <label class="scan-native-btn">
+      <span>&#x1F4F7;&nbsp; Take photo of barcode</span>
+      <input type="file" accept="image/*" capture="environment" onchange="scanFromPhoto(this)">
+    </label>
+    <!-- Paste fallback -->
+    <div class="scan-paste-row" id="scan-paste-row" style="display:none">
+      <input class="scan-paste-input" id="scan-manual-input" type="text" placeholder="Paste barcode text here…" onkeydown="if(event.key==='Enter')submitManual()">
+      <button class="scan-paste-ok" onclick="submitManual()">OK</button>
+    </div>
+    <button class="scan-manual-toggle" onclick="togglePaste()">Enter barcode text manually</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SK='il_v5',PK='il_patients_v3',SSK='il_stock_v1';
+var recs=[],patients=[],selTooth=null,curTab='home',curPatientId=null;
+var UPPER=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+var LOWER=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+var TN={18:'UR8',17:'UR7',16:'UR6',15:'UR5',14:'UR4',13:'UR3',12:'UR2',11:'UR1',21:'UL1',22:'UL2',23:'UL3',24:'UL4',25:'UL5',26:'UL6',27:'UL7',28:'UL8',48:'LR8',47:'LR7',46:'LR6',45:'LR5',44:'LR4',43:'LR3',42:'LR2',41:'LR1',31:'LL1',32:'LL2',33:'LL3',34:'LL4',35:'LL5',36:'LL6',37:'LL7',38:'LL8'};
+var TF={18:'Upper right wisdom',17:'Upper right 2nd molar',16:'Upper right 1st molar',15:'Upper right 2nd premolar',14:'Upper right 1st premolar',13:'Upper right canine',12:'Upper right lateral incisor',11:'Upper right central incisor',21:'Upper left central incisor',22:'Upper left lateral incisor',23:'Upper left canine',24:'Upper left 1st premolar',25:'Upper left 2nd premolar',26:'Upper left 1st molar',27:'Upper left 2nd molar',28:'Upper left wisdom',48:'Lower right wisdom',47:'Lower right 2nd molar',46:'Lower right 1st molar',45:'Lower right 2nd premolar',44:'Lower right 1st premolar',43:'Lower right canine',42:'Lower right lateral incisor',41:'Lower right central incisor',31:'Lower left central incisor',32:'Lower left lateral incisor',33:'Lower left canine',34:'Lower left 1st premolar',35:'Lower left 2nd premolar',36:'Lower left 1st molar',37:'Lower left 2nd molar',38:'Lower left wisdom'};
+
+function each(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn);}
+function el(id){return document.getElementById(id);}
+function gv(id){var e=el(id);return e?e.value||'':('')}
+function gt(id){var e=el(id);return e?(e.value||'').trim():'';}
+
+function loadRecs(){try{recs=JSON.parse(localStorage.getItem(SK)||'[]')}catch(e){recs=[]}}
+function saveRecs(){try{localStorage.setItem(SK,JSON.stringify(recs))}catch(e){}}
+function loadPatients(){try{patients=JSON.parse(localStorage.getItem(PK)||'[]')}catch(e){patients=[]}}
+function savePatients(){try{localStorage.setItem(PK,JSON.stringify(patients))}catch(e){}}
+
+function showPage(id){
+  each('.page',function(p){p.classList.remove('active');});
+  var pg=el('page-'+id);
+  if(pg){pg.classList.add('active');window.scrollTo(0,0);}
+  var fab=el('fab');
+  if(fab)fab.style.display=(id==='home'||id==='stock'||id==='practices')?'flex':'none';
+}
+function goToPatients(){
+  each('.tab',function(t){t.classList.remove('on');});
+  showPage('patients');
+  renderPatients();
+}
+
+function switchTab(tab){
+  curTab=tab;
+  each('.tab',function(t){t.classList.remove('on');});
+  var t=el('tab-'+tab);if(t)t.classList.add('on');
+  showPage(tab);
+  if(tab==='home')renderHome();
+  if(tab==='chart')renderChart();
+  if(tab==='profile')loadProfScreen();
+  if(tab==='stock'){renderStock();}
+  if(tab==='practices'){renderPractices();}
+}
+
+function renderHome(filter){
+  var list=curPatientId?recs.filter(function(r){return r.patientId===curPatientId;}):recs;
+  var allPtRecs=list;
+  if(filter){
+    var q=filter.toLowerCase();
+    list=recs.filter(function(r){
+      return (TF[r.tooth]||'').toLowerCase().indexOf(q)>-1||
+             (r.manufacturer||'').toLowerCase().indexOf(q)>-1||
+             (r.practice||'').toLowerCase().indexOf(q)>-1||
+             (r.lot||'').toLowerCase().indexOf(q)>-1||
+             String(r.tooth).indexOf(q)>-1;
+    });
+  }
+  var total=allPtRecs.length;
+  var grafted=0;allPtRecs.forEach(function(r){if(r.graftDone)grafted++;});
+  var pracSet={};allPtRecs.forEach(function(r){if(r.practice)pracSet[r.practice]=1;});
+  var pracCount=0;for(var k in pracSet)pracCount++;
+  // Update patient name in nav
+  var curPt=null;if(curPatientId){for(var i=0;i<patients.length;i++){if(patients[i].id===curPatientId){curPt=patients[i];break;}}}
+  var pnn=el('home-patient-name');if(pnn)pnn.textContent=curPt?curPt.name:'Records';
+  // Patient info strip
+  var ptInfo=el('home-pt-info');
+  if(ptInfo&&curPt){
+    var meta=[];
+    if(curPt.dob)meta.push('DOB: '+fmtDate(curPt.dob));
+    if(curPt.ptid)meta.push('ID: '+curPt.ptid);
+    if(curPt.phone)meta.push(curPt.phone);
+    ptInfo.innerHTML=meta.length?'<div style="background:#fff;border-radius:10px;padding:8px 14px;font-size:13px;color:#666;line-height:1.7">'+meta.join(' &middot; ')+(curPt.notes?'<br><span style="color:#FF9500">&#x26A0; '+curPt.notes+'</span>':'')+'</div>':'';
+  } else if(ptInfo){ptInfo.innerHTML='';}
+  var sub=el('home-sub');if(sub)sub.textContent='';
+  var strip=el('stat-strip');
+  if(strip)strip.innerHTML='<div class="stat-card"><div class="stat-num">'+total+'</div><div class="stat-lbl">Total</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+grafted+'</div><div class="stat-lbl">Grafted</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+pracCount+'</div><div class="stat-lbl">Practices</div></div>';
+  var wrap=el('home-list');if(!wrap)return;
+  if(!list.length){
+    wrap.innerHTML='<div class="empty"><span class="empty-icon">&#x1F9B7;</span><div class="empty-title">'+(filter?'No matches':'No records yet')+'</div><div class="empty-text">'+(filter?'Try a different search term.':'Tap the + button to add your first implant record.')+'</div></div>';
+    return;
+  }
+  var html='';
+  list.forEach(function(r){
+    html+='<div class="implant-row" onclick="openDetail(\''+r.id+'\')">'+
+      '<div class="tooth-icon'+(r.graftDone?' grafted':'')+'"><span class="tooth-emoji">&#x1F9B7;</span><span class="tooth-code">'+(TN[r.tooth]||r.tooth||'?')+'</span></div>'+
+      '<div class="implant-info">'+
+        '<div class="implant-name">'+(TF[r.tooth]||r.siteDesc||'Tooth '+r.tooth)+'</div>'+
+        '<div class="implant-mfr">'+(r.manufacturer||'Unknown')+(r.system?' &middot; '+r.system:'')+'</div>'+
+        '<div class="implant-tags">'+
+          (r.lot?'<span class="tag tag-blue">Lot '+r.lot+'</span>':'')+
+          (r.graftDone?'<span class="tag tag-green">Grafted</span>':'')+
+          (r.crown?'<span class="tag tag-purple">Restored</span>':'')+
+        '</div>'+
+        '<div class="implant-date">'+fmtDate(r.date)+' &middot; '+(r.practice||'No practice recorded')+'</div>'+
+      '</div>'+
+      '<span class="implant-chevron">&#x203A;</span></div>';
+  });
+  wrap.innerHTML='<div style="margin:0 16px"><div class="card">'+html+'</div></div>';
+}
+
+function doSearch(){var q=el('search-in').value.trim();renderHome(q||null);}
+
+function buildChart(cid,clickable){
+  var imp={},grf={};
+  var src=curPatientId?recs.filter(function(r){return r.patientId===curPatientId;}):recs;
+  src.forEach(function(r){imp[r.tooth]=true;if(r.graftDone)grf[r.tooth]=true;});
+  var html='<div class="arch-label">Upper jaw (Maxilla)</div><div class="arch-row">';
+  UPPER.forEach(function(n){
+    var cls='tbtn'+(grf[n]?' graft':imp[n]?' imp':'');
+    html+='<button class="'+cls+'"'+(clickable?' onclick="chartTap('+n+')"':'')+'>'+n+'</button>';
+  });
+  html+='</div><div class="arch-sep"></div><div class="arch-label">Lower jaw (Mandible)</div><div class="arch-row">';
+  LOWER.forEach(function(n){
+    var cls='tbtn'+(grf[n]?' graft':imp[n]?' imp':'');
+    html+='<button class="'+cls+'"'+(clickable?' onclick="chartTap('+n+')"':'')+'>'+n+'</button>';
+  });
+  html+='</div><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#E8F4FF;border:1px solid #007AFF"></div> Implant</div><div class="legend-item"><div class="legend-dot" style="background:#E8F9EE;border:1px solid #34C759"></div> Graft</div></div>';
+  var c=el(cid);if(c)c.innerHTML=html;
+}
+
+function renderChart(){
+  buildChart('main-chart',true);
+  var d=el('chart-detail');if(d)d.innerHTML='<p style="text-align:center;padding:12px;font-size:14px;color:#8E8E93">Tap a highlighted tooth to view its record.</p>';
+}
+
+function chartTap(n){
+  var r=null;
+  var src=curPatientId?recs.filter(function(x){return x.patientId===curPatientId;}):recs;
+  for(var i=0;i<src.length;i++){if(src[i].tooth===n){r=src[i];break;}}
+  var det=el('chart-detail');if(!det)return;
+  if(!r){det.innerHTML='<div style="margin:0 16px"><div class="card"><div class="cell"><span class="cell-label" style="color:#8E8E93">Tooth '+n+' &mdash; no record</span></div></div></div>';return;}
+  det.innerHTML='<div style="margin:0 16px"><div class="card"><div class="implant-row" onclick="openDetail(\''+r.id+'\')">'+
+    '<div class="tooth-icon'+(r.graftDone?' grafted':'')+'"><span class="tooth-emoji">&#x1F9B7;</span><span class="tooth-code">'+(TN[n]||n)+'</span></div>'+
+    '<div class="implant-info"><div class="implant-name">'+(TF[n]||'')+'</div><div class="implant-mfr">'+r.manufacturer+' &mdash; Lot '+r.lot+'</div></div>'+
+    '<span class="implant-chevron">&#x203A;</span></div></div></div>';
+}
+
+function openAdd(){
+  selTooth=null;
+  var ids=['f-mfr','f-sys','f-lot','f-ref','f-dia','f-len','f-date','f-clin','f-gtyp','f-bmat','f-bprod','f-blot','f-bref','f-mtyp','f-mprod','f-mlot','f-mref','f-gnotes','f-crown','f-notes','f-site'];
+  ids.forEach(function(id){var e=el(id);if(e)e.value='';});
+  var gon=el('f-gon');var mon=el('f-mon');
+  if(gon)gon.checked=false;if(mon)mon.checked=false;
+  var gs=el('graft-section');var ms=el('mem-section');
+  if(gs)gs.style.display='none';if(ms)ms.style.display='none';
+  var d=el('f-date');if(d)d.value=new Date().toISOString().split('T')[0];
+  var co=el('sel-callout');if(co){co.textContent='';co.classList.remove('show');}
+  buildChart('picker-chart',false,curPatientId);
+  showPage('add');
+  populatePracticeSelect('');
+  setTimeout(function(){
+    Array.prototype.forEach.call(document.querySelectorAll('#picker-chart .tbtn'),function(btn){
+      btn.onclick=function(){
+        Array.prototype.forEach.call(document.querySelectorAll('#picker-chart .tbtn'),function(b){b.classList.remove('sel');});
+        btn.classList.add('sel');
+        selTooth=parseInt(btn.textContent,10);
+        var co=el('sel-callout');
+        if(co){co.textContent='Tooth '+selTooth+' \u2014 '+(TF[selTooth]||'');co.classList.add('show');}
+      };
+    });
+  },100);
+}
+
+function toggleGraft(){
+  var on=el('f-gon').checked;
+  var gs=el('graft-section');if(gs)gs.style.display=on?'block':'none';
+  if(!on){var m=el('f-mon');if(m)m.checked=false;var ms=el('mem-section');if(ms)ms.style.display='none';}
+}
+function toggleMem(){var on=el('f-mon').checked;var ms=el('mem-section');if(ms)ms.style.display=on?'block':'none';}
+
+function saveRecord(addAnother){
+  var mfr=gv('f-mfr'),lot=gt('f-lot'),date=gv('f-date'),prac=gv('f-prac');
+  if(!selTooth){showToast('Please select a tooth site');return;}
+  if(!mfr){showToast('Please select a manufacturer');return;}
+  if(!lot){showToast('Lot number is required');return;}
+  if(!date){showToast('Please enter the implant date');return;}
+  if(!prac){showToast('Practice name is required');return;}
+  var gon=el('f-gon').checked,mon=el('f-mon').checked&&gon;
+  var rec={id:'r'+Date.now(),patientId:curPatientId,tooth:selTooth,siteDesc:gt('f-site'),manufacturer:mfr,system:gt('f-sys'),lot:lot,ref:gt('f-ref'),diameter:gv('f-dia'),length:gv('f-len'),date:date,practice:prac,clinician:gt('f-clin'),crown:gv('f-crown'),notes:gt('f-notes'),graftDone:gon,graftType:gon?gv('f-gtyp'):'',boneMat:gon?gv('f-bmat'):'',boneProd:gon?gt('f-bprod'):'',boneLot:gon?gt('f-blot'):'',boneRef:gon?gt('f-bref'):'',memUsed:mon,memType:mon?gv('f-mtyp'):'',memProd:mon?gt('f-mprod'):'',memLot:mon?gt('f-mlot'):'',memRef:mon?gt('f-mref'):'',graftNotes:gon?gt('f-gnotes'):'',savedAt:new Date().toISOString()};
+  recs.unshift(rec);saveRecs();deductStock(rec);
+  if(addAnother){
+    openAddSameVisit(rec);
+  } else {
+    showToast('Record saved');showPage('home');renderHome();
+  }
+}
+
+function openAddSameVisit(prev){
+  var visitDate=prev.date, visitPrac=prev.practice, visitClin=prev.clinician;
+  openAdd();
+  setTimeout(function(){
+    var d=el('f-date');if(d)d.value=visitDate;
+    populatePracticeSelect(visitPrac);
+    var c=el('f-clin');if(c)c.value=visitClin;
+    showToast('Visit details carried over — select new tooth');
+  },200);
+}
+
+function openDetail(id){
+  var r=null;for(var i=0;i<recs.length;i++){if(recs[i].id===id){r=recs[i];break;}}
+  if(!r)return;
+  var nt=el('det-nav-title');if(nt)nt.textContent=TN[r.tooth]||'Implant';
+  function row(k,v){if(!v)return'';return'<div class="cell"><span class="cell-label" style="font-size:15px;color:#666">'+k+'</span><span class="cell-value" style="font-size:15px;max-width:60%">'+v+'</span></div>';}
+  var html='<div class="hero'+(r.graftDone?' grafted':'')+'">'+'<div class="hero-pre">Tooth '+r.tooth+' &middot; '+(TN[r.tooth]||'')+'</div>'+'<div class="hero-name">'+(TF[r.tooth]||r.siteDesc||'Implant')+'</div>'+'<div class="hero-mfr">'+r.manufacturer+(r.system?' &middot; '+r.system:'')+'</div>'+(r.graftDone?'<div class="hero-graft">Bone graft performed</div>':'')+'<div class="hero-date">Placed '+fmtDate(r.date)+'</div></div>';
+  html+='<div class="section-label">Implant details</div><div class="card" style="margin:0 16px">'+row('Manufacturer',r.manufacturer)+row('System',r.system)+row('Lot / Batch no.',r.lot)+row('Reference no.',r.ref)+row('Diameter',r.diameter?r.diameter+' mm':'')+row('Length',r.length?r.length+' mm':'')+row('Date placed',fmtDate(r.date))+row('Site',r.siteDesc)+'</div>';
+  html+='<div class="section-label">Practice &amp; clinician</div><div class="card" style="margin:0 16px">'+row('Practice',r.practice)+row('Clinician',r.clinician)+'</div>';
+  if(r.graftDone){
+    html+='<div class="section-label">Bone graft</div><div class="card" style="margin:0 16px">'+row('Graft type',r.graftType)+(r.boneMat||r.boneProd?'<div class="sub-header">Bone material</div>'+row('Material',r.boneMat)+row('Product',r.boneProd)+row('Lot number',r.boneLot)+row('Reference no.',r.boneRef):'')+(r.memUsed?'<div class="sub-header">Membrane</div>'+row('Type',r.memType)+row('Product',r.memProd)+row('Lot number',r.memLot)+row('Reference no.',r.memRef):'')+(r.graftNotes?'<div class="cell"><span style="font-size:15px;color:#666;line-height:1.5">'+r.graftNotes+'</span></div>':'')+'</div>';
+  }
+  if(r.crown||r.notes){html+='<div class="section-label">Restoration &amp; notes</div><div class="card" style="margin:0 16px">'+row('Crown type',r.crown)+row('Notes',r.notes)+'</div>';}
+  html+='<button class="btn-danger" onclick="deleteRec(\''+r.id+'\')">Delete Record</button>';
+  var body=el('det-body');if(body)body.innerHTML=html;
+  showPage('detail');
+}
+
+function deleteRec(id){
+  if(!confirm('Delete this record?'))return;
+  var n=[];recs.forEach(function(r){if(r.id!==id)n.push(r);});recs=n;
+  saveRecs();showToast('Deleted');showPage('home');renderHome();
+}
+
+function loadProfScreen(){
+  var p=null;if(curPatientId){for(var i=0;i<patients.length;i++){if(patients[i].id===curPatientId){p=patients[i];break;}}}
+  var pn=el('prof-page-name');if(pn)pn.textContent=p?p.name:'Patient';
+  var ps=el('prof-page-sub');if(ps)ps.textContent=p&&p.ptid?'Patient ID: '+p.ptid:'';
+  var dc=el('prof-detail-card');
+  if(dc&&p){
+    var rows='';
+    if(p.dob)rows+='<div class="cell"><span class="cell-label" style="color:#666;font-size:15px">Date of birth</span><span class="cell-value" style="font-size:15px">'+fmtDate(p.dob)+'</span></div>';
+    if(p.ptid)rows+='<div class="cell"><span class="cell-label" style="color:#666;font-size:15px">Patient ID</span><span class="cell-value" style="font-size:15px">'+p.ptid+'</span></div>';
+    if(p.phone)rows+='<div class="cell"><span class="cell-label" style="color:#666;font-size:15px">Phone</span><span class="cell-value" style="font-size:15px">'+p.phone+'</span></div>';
+    if(p.notes)rows+='<div class="cell"><span class="cell-label" style="color:#FF9500;font-size:15px">&#x26A0; Allergies / notes</span><span class="cell-value" style="font-size:14px;color:#666;max-width:60%">'+p.notes+'</span></div>';
+    dc.innerHTML=rows?'<div class="card" style="margin:0 16px">'+rows+'</div>':'';
+  } else if(dc){dc.innerHTML='';}
+}
+function saveProf(){}
+function updateProfDisplay(){}
+
+function exportAllData(){
+  var savedId=curPatientId;
+  var allRows=[];
+  var headers=['Patient name','Patient ID','Tooth (FDI)','Tooth name','Site description','Manufacturer','Implant system','Lot number','Reference no.','Diameter (mm)','Length (mm)','Date placed','Practice','Clinician','Crown / restoration','Notes','Graft performed','Graft type','Bone material','Bone product','Bone lot no.','Bone reference no.','Membrane used','Membrane type','Membrane product','Membrane lot no.','Membrane reference no.','Graft notes','Date of birth','Record saved'];
+  function esc(v){if(v===null||v===undefined)return'';var s=String(v).replace(/"/g,'""');if(s.indexOf(',')>-1||s.indexOf('"')>-1||s.indexOf('\n')>-1)s='"'+s+'"';return s;}
+  allRows.push(headers.map(esc).join(','));
+  recs.forEach(function(r){
+    var p=null;for(var i=0;i<patients.length;i++){if(patients[i].id===r.patientId){p=patients[i];break;}}
+    var row=[p?p.name||'':'',p?p.ptid||'':'',r.tooth||'',TF[r.tooth]||r.siteDesc||'',r.siteDesc||'',r.manufacturer||'',r.system||'',r.lot||'',r.ref||'',r.diameter||'',r.length||'',r.date||'',r.practice||'',r.clinician||'',r.crown||'',r.notes||'',r.graftDone?'Yes':'No',r.graftType||'',r.boneMat||'',r.boneProd||'',r.boneLot||'',r.boneRef||'',r.memUsed?'Yes':'No',r.memType||'',r.memProd||'',r.memLot||'',r.memRef||'',r.graftNotes||'',p?p.dob||'':'',r.savedAt?r.savedAt.split('T')[0]:''];
+    allRows.push(row.map(esc).join(','));
+  });
+  try{var csv='\uFEFF'+allRows.join('\r\n');var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='all-patients-implants.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Exported all data');}catch(e){showToast('Export failed');}
+}
+
+function exportData(){
+  var p=null;if(curPatientId){for(var i=0;i<patients.length;i++){if(patients[i].id===curPatientId){p=patients[i];break;}}}
+  var list=curPatientId?recs.filter(function(r){return r.patientId===curPatientId;}):recs;
+  if(!list.length){showToast('No records to export');return;}
+  try{
+    var headers=[
+      'Tooth (FDI)','Tooth name','Site description',
+      'Manufacturer','Implant system','Lot number','Reference no.',
+      'Diameter (mm)','Length (mm)','Date placed',
+      'Practice','Practice address','Clinician','GDC number','Phone',
+      'Crown / restoration','Notes',
+      'Graft performed','Graft type',
+      'Bone material','Bone product','Bone lot no.','Bone reference no.',
+      'Membrane used','Membrane type','Membrane product','Membrane lot no.','Membrane reference no.',
+      'Graft notes',
+      'Patient name','Patient ID','Date of birth',
+      'Record saved'
+    ];
+    function esc(v){
+      if(v===null||v===undefined)return'';
+      var s=String(v).replace(/"/g,'""');
+      if(s.indexOf(',')>-1||s.indexOf('"')>-1||s.indexOf('\n')>-1)s='"'+s+'"';
+      return s;
+    }
+    var rows=[headers.map(esc).join(',')];
+    list.forEach(function(r){
+      var row=[
+        r.tooth||'',
+        TF[r.tooth]||r.siteDesc||'',
+        r.siteDesc||'',
+        r.manufacturer||'',
+        r.system||'',
+        r.lot||'',
+        r.ref||'',
+        r.diameter||'',
+        r.length||'',
+        r.date||'',
+        r.practice||'',
+        r.clinician||'',
+        r.crown||'',
+        r.notes||'',
+        r.graftDone?'Yes':'No',
+        r.graftType||'',
+        r.boneMat||'',
+        r.boneProd||'',
+        r.boneLot||'',
+        r.boneRef||'',
+        r.memUsed?'Yes':'No',
+        r.memType||'',
+        r.memProd||'',
+        r.memLot||'',
+        r.memRef||'',
+        r.graftNotes||'',
+        p?p.name||'':'',
+        p?p.ptid||'':'',
+        p?p.dob||'':'',
+        r.savedAt?r.savedAt.split('T')[0]:''
+      ];
+      rows.push(row.map(esc).join(','));
+    });
+    var csv='\uFEFF'+rows.join('\r\n');
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(p?p.name.replace(/\s+/g,'-').toLowerCase():'patient')+'-implants.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Exported '+recs.length+' record'+(recs.length!==1?'s':'')+' as CSV');
+  }catch(e){showToast('Export failed — try on desktop');}
+}
+
+function clearPatient(){
+  if(!confirm('Delete all implant records for this patient? Cannot be undone.'))return;
+  var n=[];recs.forEach(function(r){if(r.patientId!==curPatientId)n.push(r);});recs=n;
+  saveRecs();showToast('Patient records cleared');renderHome();
+}
+function clearAll(){
+  if(!confirm('Delete ALL patients and records? Cannot be undone.'))return;
+  recs=[];patients=[];saveRecs();savePatients();showToast('All data cleared');goToPatients();
+}
+
+function fmtDate(s){
+  if(!s)return '\u2014';
+  try{return new Date(s+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}
+  catch(e){return s;}
+}
+
+var _toast;
+function showToast(msg){
+  var e=el('toast');if(!e)return;
+  e.textContent=msg;e.classList.add('show');
+  clearTimeout(_toast);_toast=setTimeout(function(){e.classList.remove('show');},2200);
+}
+
+
+
+/* ══ INTRO ══════════════════════════════════════ */
+function startApp(){
+  var intro=el('page-intro');
+  if(intro)intro.style.display='none';
+  var tabs=el('main-tabs');
+  if(tabs)tabs.classList.remove('intro-hidden');
+  var fab=el('fab');
+  if(fab)fab.classList.remove('intro-hidden');
+  each('.tab',function(t){t.classList.remove('on');});
+  var t=el('tab-home');if(t)t.classList.add('on');
+  showPage('patients');
+  renderPatients();
+}
+
+/* ══ PRACTICES ══════════════════════════════════ */
+var PRACK='il_practices_v1';
+var practices=[];
+
+function loadPractices(){try{practices=JSON.parse(localStorage.getItem(PRACK)||'[]');}catch(e){practices=[];}}
+function savePractices(){try{localStorage.setItem(PRACK,JSON.stringify(practices));}catch(e){}}
+
+function renderPractices(){
+  var sub=el('pracs-sub');if(sub)sub.textContent=practices.length+' practice'+(practices.length!==1?'s':'');
+  var wrap=el('practices-list');if(!wrap)return;
+  if(!practices.length){
+    wrap.innerHTML='<div class="empty"><span class="empty-icon" style="font-size:48px;display:block;margin-bottom:16px">&#x1F3E5;</span><div class="empty-title">No practices yet</div><div class="empty-text">Tap + Add to add your first practice. You can then select it when adding implant records.</div></div>';
+    return;
+  }
+  var html='<div style="margin:0 16px"><div class="card">';
+  practices.forEach(function(p){
+    html+='<div class="cell tap" onclick="openAddPractice(\''+p.id+'\')">'+
+      '<div style="flex:1"><div class="cell-label">'+p.name+'</div>'+(p.clin||p.addr?'<div style="font-size:13px;color:#666;margin-top:1px">'+(p.clin||'')+(p.clin&&p.addr?' &middot; ':'')+( p.addr||'')+'</div>':'')+'</div>'+
+      '<span class="cell-arrow">&#x203A;</span></div>';
+  });
+  html+='</div></div>';
+  wrap.innerHTML=html;
+}
+
+function openAddPractice(id){
+  var p=null;if(id){for(var i=0;i<practices.length;i++){if(practices[i].id===id){p=practices[i];break;}}}
+  var title=el('prac-edit-title');if(title)title.textContent=p?'Edit Practice':'Add Practice';
+  var pid=el('prace-id');if(pid)pid.value=p?p.id:'';
+  var nm=el('prace-name');if(nm)nm.value=p?p.name||'':'';
+  var cl=el('prace-clin');if(cl)cl.value=p?p.clin||'':'';
+  var ad=el('prace-addr');if(ad)ad.value=p?p.addr||'':'';
+  var ph=el('prace-phone');if(ph)ph.value=p?p.phone||'':'';
+  var db=el('prace-delete-btn');if(db)db.style.display=p?'block':'none';
+  showPage('practice-edit');
+}
+
+function savePractice(){
+  var name=gt('prace-name');
+  if(!name){showToast('Please enter a practice name');return;}
+  var lid=gt('prace-id');
+  var p={id:lid||('prac'+Date.now()),name:name,clin:gt('prace-clin'),addr:gt('prace-addr'),phone:gt('prace-phone')};
+  if(lid){for(var i=0;i<practices.length;i++){if(practices[i].id===lid){practices[i]=p;break;}}}
+  else{practices.push(p);}
+  savePractices();
+  showToast(lid?'Practice updated':'Practice added');
+  showPage('practices');renderPractices();
+}
+
+function deletePractice(){
+  var id=gt('prace-id');if(!id)return;
+  if(!confirm('Delete this practice?'))return;
+  var n=[];practices.forEach(function(p){if(p.id!==id)n.push(p);});practices=n;
+  savePractices();showToast('Practice deleted');showPage('practices');renderPractices();
+}
+
+function populatePracticeSelect(selectedVal){
+  var sel=el('f-prac');if(!sel)return;
+  sel.innerHTML='';
+  if(!practices.length){
+    var o=document.createElement('option');o.value='';o.textContent='No practices — add one in Practices tab';sel.appendChild(o);
+    return;
+  }
+  var def=document.createElement('option');def.value='';def.textContent='Select practice…';sel.appendChild(def);
+  practices.forEach(function(p){
+    var opt=document.createElement('option');
+    opt.value=p.name;
+    opt.textContent=p.name+(p.clin?' \u2014 '+p.clin:'');
+    if(p.name===selectedVal)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.onchange=function(){
+    var chosen=null;
+    for(var i=0;i<practices.length;i++){if(practices[i].name===sel.value){chosen=practices[i];break;}}
+    var clinEl=el('f-clin');
+    if(clinEl&&chosen&&chosen.clin&&!clinEl.value)clinEl.value=chosen.clin;
+  };
+}
+
+/* ══ PATIENT MANAGEMENT ════════════════════════ */
+function initials(name){
+  if(!name)return'?';
+  var parts=name.trim().split(' ');
+  if(parts.length>=2)return(parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+  return name[0].toUpperCase();
+}
+
+function renderPatients(){
+  var q='';var si=el('pts-search');if(si)q=si.value.trim().toLowerCase();
+  var list=patients;
+  if(q){list=patients.filter(function(p){return(p.name||'').toLowerCase().indexOf(q)>-1||(p.ptid||'').toLowerCase().indexOf(q)>-1;});}
+  var sub=el('pts-sub');if(sub)sub.textContent=patients.length+' patient'+(patients.length!==1?'s':'');
+  var wrap=el('pts-list');if(!wrap)return;
+  if(!list.length){
+    wrap.innerHTML='<div class="empty"><span class="empty-icon" style="font-size:48px;display:block;margin-bottom:16px">&#x1F9D1;&#x200D;&#x2695;</span><div class="empty-title">'+(q?'No matches':'No patients yet')+'</div><div class="empty-text">'+(q?'Try a different search.':'Tap + New to add your first patient.')+'</div></div>';
+    return;
+  }
+  var html='<div style="margin:0 16px"><div class="card">';
+  list.forEach(function(p){
+    var count=recs.filter(function(r){return r.patientId===p.id;}).length;
+    html+='<div class="pt-row" onclick="selectPatient(\''+p.id+'\')">'+
+      '<div class="pt-av">'+initials(p.name)+'</div>'+
+      '<div class="pt-info">'+
+        '<div class="pt-name">'+p.name+'</div>'+
+        '<div class="pt-meta">'+(p.dob?fmtDate(p.dob):'')+(p.ptid?(p.dob?' &middot; ':'')+p.ptid:'')+((!p.dob&&!p.ptid)?'No details recorded':'')+'</div>'+
+      '</div>'+
+      (count>0?'<div class="pt-badge">'+count+'</div>':'')+
+      '<div class="pt-chev">&#x203A;</div>'+
+    '</div>';
+  });
+  html+='</div></div>';
+  wrap.innerHTML=html;
+}
+
+function selectPatient(id){
+  curPatientId=id;
+  curTab='home';
+  each('.tab',function(t){t.classList.remove('on');});
+  var t=el('tab-home');if(t)t.classList.add('on');
+  showPage('home');
+  renderHome();
+}
+
+function openEditPatient(id){
+  var p=null;if(id){for(var i=0;i<patients.length;i++){if(patients[i].id===id){p=patients[i];break;}}}
+  var title=el('pt-edit-title');if(title)title.textContent=p?'Edit Patient':'New Patient';
+  var pid=el('pe-id');if(pid)pid.value=p?p.id:'';
+  var nm=el('pe-name');if(nm)nm.value=p?p.name||'':'';
+  var db=el('pe-dob');if(db)db.value=p?p.dob||'':'';
+  var pt=el('pe-ptid');if(pt)pt.value=p?p.ptid||'':'';
+  var ph=el('pe-phone');if(ph)ph.value=p?p.phone||'':'';
+  var nt=el('pe-notes');if(nt)nt.value=p?p.notes||'':'';
+  var dbtn=el('pe-delete-btn');if(dbtn)dbtn.style.display=p?'block':'none';
+  showPage('patient-edit');
+}
+
+function closePatientEdit(){
+  if(curPatientId){
+    // came from inside a patient - go back to their records
+    showPage('home');renderHome();
+  } else {
+    showPage('patients');renderPatients();
+  }
+}
+
+function savePatient(){
+  var name=gt('pe-name');
+  if(!name){showToast('Please enter a patient name');return;}
+  var lid=gt('pe-id');
+  var p={id:lid||('p'+Date.now()),name:name,dob:gv('pe-dob'),ptid:gt('pe-ptid'),phone:gt('pe-phone'),notes:gt('pe-notes'),updatedAt:new Date().toISOString()};
+  if(lid){for(var i=0;i<patients.length;i++){if(patients[i].id===lid){patients[i]=p;break;}}}
+  else{patients.unshift(p);curPatientId=p.id;}
+  savePatients();
+  showToast(lid?'Patient updated':'Patient added');
+  if(lid&&curPatientId===lid){showPage('home');renderHome();}
+  else{selectPatient(p.id);}
+}
+
+function deletePatient(){
+  var id=gt('pe-id');if(!id)return;
+  var count=recs.filter(function(r){return r.patientId===id;}).length;
+  if(!confirm('Delete this patient'+(count?' and their '+count+' implant record'+(count!==1?'s':''):'')+' ? This cannot be undone.'))return;
+  var np=[];patients.forEach(function(p){if(p.id!==id)np.push(p);});patients=np;
+  var nr=[];recs.forEach(function(r){if(r.patientId!==id)nr.push(r);});recs=nr;
+  savePatients();saveRecs();
+  if(curPatientId===id)curPatientId=null;
+  showToast('Patient deleted');
+  showPage('patients');renderPatients();
+}
+
+function seed(){
+  if(patients.length>0)return;
+  if(!practices.length){
+    practices=[{id:'prac1',name:'Pure Implant Health',clin:'Dr K Phillips',addr:'1 Dental House, Manchester M1 1AA',phone:'0161 234 5678'}];
+    savePractices();
+  }
+  patients=[
+    {id:'demo_p1',name:'Karen Phillips',dob:'1972-04-15',ptid:'PT-001',phone:'07712 345678',notes:'No allergies',updatedAt:new Date().toISOString()},
+    {id:'demo_p2',name:'Michael Reeve',dob:'1985-09-30',ptid:'PT-002',phone:'07800 123456',notes:'Penicillin allergy — note in records',updatedAt:new Date().toISOString()}
+  ];
+  recs=[
+    {id:'s1',patientId:'demo_p1',tooth:36,siteDesc:'Lower left first molar',manufacturer:'Straumann',system:'Bone Level Tapered RC',lot:'7A4392F',ref:'021.4411',diameter:'4.1',length:'10',date:'2024-11-14',practice:'Pure Implant Health',clinician:'Dr K Phillips',crown:'Zirconia crown',notes:'ISQ 74 at placement.',graftDone:true,graftType:'Socket preservation',boneMat:'Xenograft - bovine',boneProd:'Geistlich Bio-Oss',boneLot:'BO8821K',boneRef:'30-0060',memUsed:true,memType:'Resorbable - collagen',memProd:'Geistlich Bio-Gide',memLot:'BG3391M',memRef:'15709',graftNotes:'0.5cc Bio-Oss with PRF. Primary closure achieved.',savedAt:new Date().toISOString()},
+    {id:'s2',patientId:'demo_p1',tooth:46,siteDesc:'Lower right first molar',manufacturer:'Straumann',system:'Bone Level Tapered RC',lot:'7A4393G',ref:'021.4411',diameter:'4.1',length:'10',date:'2024-11-14',practice:'Pure Implant Health',clinician:'Dr K Phillips',crown:'',notes:'',graftDone:false,savedAt:new Date().toISOString()},
+    {id:'s3',patientId:'demo_p2',tooth:26,siteDesc:'Upper left first molar',manufacturer:'Nobel Biocare',system:'Nobel Active',lot:'NB8821X',ref:'34609',diameter:'4.3',length:'11.5',date:'2025-03-08',practice:'Pure Implant Health',clinician:'Dr K Phillips',crown:'Porcelain fused to metal',notes:'',graftDone:false,savedAt:new Date().toISOString()}
+  ];
+  savePatients();saveRecs();
+}
+
+
+/* ══ STOCK ══════════════════════════════════════════ */
+var SSK='il_stock_v1';
+var stock=[];
+var stockFilter='all';
+var adjDelta=0;
+
+function loadStock(){try{stock=JSON.parse(localStorage.getItem(SSK)||'[]')}catch(e){stock=[]}}
+function saveStock(){try{localStorage.setItem(SSK,JSON.stringify(stock))}catch(e){}}
+
+function catColor(cat){
+  if(cat==='implant')return'#007AFF';
+  if(cat==='bone')return'#34C759';
+  if(cat==='membrane')return'#FF9500';
+  return'#8E8E93';
+}
+function catLabel(cat){
+  if(cat==='implant')return'Implant component';
+  if(cat==='bone')return'Bone graft';
+  if(cat==='membrane')return'Membrane';
+  return'Other';
+}
+
+function isLow(item){
+  if(!item.lowAt||item.lowAt==='')return false;
+  return parseInt(item.qty,10)<=parseInt(item.lowAt,10);
+}
+function isExpiringSoon(item){
+  if(!item.expiry)return false;
+  var d=new Date(item.expiry+'T12:00:00');
+  var now=new Date();
+  var diff=(d-now)/(1000*60*60*24);
+  return diff>=0&&diff<=30;
+}
+
+function renderStock(){
+  var list=stock;
+  if(stockFilter!=='all'){
+    var f=stockFilter;
+    list=stock.filter(function(s){return s.cat===f;});
+  }
+
+  /* subtitle */
+  var sub=el('stock-sub');
+  if(sub)sub.textContent=stock.length+' supply item'+(stock.length!==1?'s':'');
+
+  /* low stock banner */
+  var lowItems=[];
+  stock.forEach(function(s){if(isLow(s))lowItems.push(s);});
+  var banner=el('low-stock-banner');
+  if(banner){
+    if(lowItems.length>0){
+      var names=[];lowItems.forEach(function(s){names.push(s.name);});
+      banner.style.display='block';
+      banner.textContent='Running low: '+names.join(', ');
+    } else {
+      banner.style.display='none';
+    }
+  }
+
+  var wrap=el('stock-list');if(!wrap)return;
+  if(!list.length){
+    wrap.innerHTML='<div class="empty"><span class="empty-icon">&#x1F4E6;</span><div class="empty-title">'+(stockFilter==='all'?'No items yet':'No items in this category')+'</div><div class="empty-text">'+(stockFilter==='all'?'Tap + to add your implant components, bone graft materials and membranes.':'Switch to All or tap + to add items.')+'</div></div>';
+    return;
+  }
+  var html='<div style="margin:0 16px"><div class="card">';
+  list.forEach(function(s){
+    var low=isLow(s);
+    var exp=isExpiringSoon(s);
+    var qtyClass=low?'stock-low':(parseInt(s.qty,10)===0?'stock-low':'stock-ok');
+    var dot=catColor(s.cat);
+    html+='<div class="stock-item" onclick="openStockEdit(\''+s.id+'\')">'+
+      '<div class="stock-dot" style="background:'+dot+'"></div>'+
+      '<div class="stock-info">'+
+        '<div class="stock-name">'+s.name+'</div>'+
+        '<div class="stock-meta">'+catLabel(s.cat)+(s.mfr?' &middot; '+s.mfr:'')+(exp?' &middot; <span style="color:#FF9500">Expiring soon</span>':'')+(low?' &middot; <span style="color:#FF3B30">Low stock</span>':'')+'</div>'+
+      '</div>'+
+      '<div class="stock-right">'+
+        '<div class="stock-qty '+qtyClass+'">'+s.qty+'</div>'+
+        '<div class="stock-unit">'+(s.unit||'units')+'</div>'+
+      '</div>'+
+      '<div onclick="event.stopPropagation();openAdjust(\''+s.id+'\')" style="padding:0 0 0 8px;color:#007AFF;font-size:22px;font-weight:300">&#xB1;</div>'+
+    '</div>';
+  });
+  html+='</div></div>';
+  wrap.innerHTML=html;
+}
+
+function filterStock(cat){
+  stockFilter=cat;
+  each('.stock-filter',function(b){b.classList.remove('on');});
+  var btn=el('sf-'+cat);if(btn)btn.classList.add('on');
+  renderStock();
+}
+
+function openStockEdit(id){
+  var item=null;
+  if(id){for(var i=0;i<stock.length;i++){if(stock[i].id===id){item=stock[i];break;}}}
+  var title=el('stock-edit-title');if(title)title.textContent=item?'Edit Supply':'Add Supply';
+  var sid=el('se-id');if(sid)sid.value=item?item.id:'';
+  var fields={cat:'se-cat',name:'se-name',mfr:'se-mfr',ref:'se-ref',qty:'se-qty',lowAt:'se-low',unit:'se-unit',lot:'se-lot',expiry:'se-expiry',loc:'se-loc',notes:'se-notes'};
+  for(var k in fields){var e=el(fields[k]);if(e)e.value=item&&item[k]!==undefined?item[k]:'';}
+  var db=el('se-delete-btn');if(db)db.style.display=item?'block':'none';
+  showPage('stock-edit');
+}
+
+function saveStockItem(){
+  var cat=gv('se-cat'),name=gt('se-name'),qtyRaw=gv('se-qty');
+  if(!cat){showToast('Please select a category');return;}
+  if(!name){showToast('Please enter a name');return;}
+  if(qtyRaw===''){showToast('Please enter a quantity');return;}
+  var qty=parseInt(qtyRaw,10);if(isNaN(qty)||qty<0)qty=0;
+  var lid=gt('se-id');
+  var item={
+    id:lid||('st'+Date.now()),
+    cat:cat,name:name,mfr:gt('se-mfr'),ref:gt('se-ref'),
+    qty:qty,
+    lowAt:gv('se-low'),unit:gv('se-unit'),
+    lot:gt('se-lot'),expiry:gv('se-expiry'),loc:gt('se-loc'),notes:gt('se-notes'),
+    updatedAt:new Date().toISOString()
+  };
+  if(lid){
+    for(var i=0;i<stock.length;i++){if(stock[i].id===lid){stock[i]=item;break;}}
+  } else {
+    stock.unshift(item);
+  }
+  saveStock();showToast(lid?'Supply updated':'Supply added');switchTab('stock');
+}
+
+function deleteStockItem(){
+  var id=gt('se-id');if(!id)return;
+  if(!confirm('Delete this stock item?'))return;
+  var n=[];stock.forEach(function(s){if(s.id!==id)n.push(s);});stock=n;
+  saveStock();showToast('Supply deleted');switchTab('stock');
+}
+
+function openAdjust(id){
+  var item=null;for(var i=0;i<stock.length;i++){if(stock[i].id===id){item=stock[i];break;}}
+  if(!item)return;
+  adjDelta=0;
+  var aid=el('adj-id');if(aid)aid.value=id;
+  var body=el('adj-body');if(!body)return;
+  body.innerHTML='<div class="adj-card">'+
+    '<div class="adj-name">'+item.name+'</div>'+
+    '<div class="adj-current">Current stock: <strong>'+item.qty+'</strong> '+(item.unit||'units')+'</div>'+
+    '<div class="adj-stepper">'+
+      '<button class="adj-btn" onclick="changeAdj(-1)">&#x2212;</button>'+
+      '<div class="adj-num" id="adj-delta">0</div>'+
+      '<button class="adj-btn" onclick="changeAdj(1)">+</button>'+
+    '</div>'+
+    '<div style="font-size:14px;color:#666;margin-bottom:16px" id="adj-result">No change</div>'+
+  '</div>'+
+  '<div class="adj-reason">'+
+    '<div class="section-label">Reason (optional)</div>'+
+    '<div class="card"><div class="field"><select id="adj-reason-sel" style="width:100%;text-align:left;color:#000"><option value="">Select reason…</option><option>Received new supply</option><option>Used at appointment</option><option>Expired / disposed</option><option>Quantity correction</option><option>Returned to clinic</option><option>Other</option></select></div></div>'+
+  '</div>';
+  showPage('stock-adjust');
+}
+
+function changeAdj(delta){
+  adjDelta+=delta;
+  var dEl=el('adj-delta');if(dEl)dEl.textContent=(adjDelta>0?'+':'')+adjDelta;
+  var id=gt('adj-id');
+  var item=null;for(var i=0;i<stock.length;i++){if(stock[i].id===id){item=stock[i];break;}}
+  var newQty=item?Math.max(0,parseInt(item.qty,10)+adjDelta):adjDelta;
+  var res=el('adj-result');
+  if(res){
+    if(adjDelta===0)res.textContent='No change';
+    else res.textContent='New quantity: '+newQty+' '+(item&&item.unit?item.unit:'units');
+  }
+}
+
+function applyAdjust(){
+  if(adjDelta===0){switchTab('stock');return;}
+  var id=gt('adj-id');
+  for(var i=0;i<stock.length;i++){
+    if(stock[i].id===id){
+      stock[i].qty=Math.max(0,parseInt(stock[i].qty,10)+adjDelta);
+      stock[i].updatedAt=new Date().toISOString();
+      break;
+    }
+  }
+  saveStock();
+  showToast('Stock updated');
+  switchTab('stock');
+}
+
+/* Auto-deduct stock when a record is saved */
+function deductStock(rec){
+  var changed=[];
+  stock.forEach(function(s){
+    var matched=false;
+    if(s.cat==='implant'&&rec.manufacturer&&s.mfr&&rec.manufacturer.toLowerCase()===s.mfr.toLowerCase()){
+      if(!rec.lot||!s.lot||rec.lot===s.lot)matched=true;
+    }
+    if(s.cat==='bone'&&rec.graftDone&&rec.boneProd&&s.name&&rec.boneProd.toLowerCase().indexOf(s.name.toLowerCase())>-1)matched=true;
+    if(s.cat==='membrane'&&rec.memUsed&&rec.memProd&&s.name&&rec.memProd.toLowerCase().indexOf(s.name.toLowerCase())>-1)matched=true;
+    if(matched&&parseInt(s.qty,10)>0){
+      s.qty=parseInt(s.qty,10)-1;
+      s.updatedAt=new Date().toISOString();
+      changed.push(s);
+    }
+  });
+  if(changed.length>0){
+    saveStock();
+    var lowNow=[];changed.forEach(function(s){if(isLow(s))lowNow.push(s.name);});
+    if(lowNow.length>0)setTimeout(function(){showToast('Running low: '+lowNow.join(', '));},800);
+    else showToast('Stock updated automatically');
+  }
+}
+
+function updateStockEditHints(){}
+
+loadRecs();loadPatients();loadPractices();loadStock();seed();
+
+/* ══ BARCODE SCANNER ══════════════════════════ */
+var scanTarget=null, scanStream=null, scanRaf=null, scanActive=false;
+
+function openScanner(target){
+  scanTarget=target;
+  scanActive=true;
+  var labels={implant:'Scan Implant',bone:'Scan Bone Graft',membrane:'Scan Membrane',stock:'Scan Supply'};
+  var t=el('scan-title');if(t)t.textContent=labels[target]||'Scan Barcode';
+  var st=el('scan-status');if(st){st.textContent='Starting camera…';st.className='scan-status';}
+  var pr=el('scan-paste-row');if(pr)pr.style.display='none';
+  var mi=el('scan-manual-input');if(mi)mi.value='';
+  el('scan-modal').classList.add('open');
+  startCam();
+}
+
+function closeScanner(){
+  scanActive=false;
+  stopCam();
+  el('scan-modal').classList.remove('open');
+  scanTarget=null;
+}
+
+function togglePaste(){
+  var pr=el('scan-paste-row');
+  if(!pr)return;
+  pr.style.display=pr.style.display==='none'?'flex':'none';
+  if(pr.style.display==='flex'){var mi=el('scan-manual-input');if(mi)setTimeout(function(){mi.focus();},100);}
+}
+
+function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setScanStatus('Camera unavailable — use photo or manual entry below');return;
+  }
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:'environment'},width:{ideal:640},height:{ideal:480}}
+  }).then(function(stream){
+    if(!scanActive){stream.getTracks().forEach(function(t){t.stop();});return;}
+    scanStream=stream;
+    var v=el('scan-video');
+    if(!v)return;
+    v.srcObject=stream;
+    v.setAttribute('playsinline','true');
+    v.muted=true;
+    v.play().then(function(){
+      setScanStatus('Scanning…');
+      loadJsQR(function(){startRaf(v);});
+    });
+  }).catch(function(e){
+    if(!scanActive)return;
+    var msg=e.name==='NotAllowedError'?'Camera permission denied — use photo or manual entry':'Camera unavailable — use photo or manual entry';
+    setScanStatus(msg);
+  });
+}
+
+function stopCam(){
+  if(scanRaf){cancelAnimationFrame(scanRaf);scanRaf=null;}
+  if(scanStream){scanStream.getTracks().forEach(function(t){t.stop();});scanStream=null;}
+  var v=el('scan-video');if(v)v.srcObject=null;
+}
+
+function setScanStatus(msg,found){
+  var st=el('scan-status');
+  if(st){st.textContent=msg;st.className='scan-status'+(found?' found':'');}
+}
+
+// Load jsQR from CDN — small (30kb), works on Safari
+var jsqrLoaded=false;
+function loadJsQR(cb){
+  if(window.jsQR){cb();return;}
+  if(jsqrLoaded){setTimeout(cb,100);return;}
+  jsqrLoaded=true;
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+  s.onload=function(){cb();};
+  s.onerror=function(){setScanStatus('QR library failed — use photo or manual entry');};
+  document.head.appendChild(s);
+}
+
+var scanCanvas=null, scanCtx=null;
+function startRaf(video){
+  if(!scanCanvas){
+    scanCanvas=document.createElement('canvas');
+    scanCtx=scanCanvas.getContext('2d',{willReadFrequently:true});
+  }
+  function tick(){
+    if(!scanActive)return;
+    if(video.readyState>=2&&video.videoWidth>0){
+      var w=video.videoWidth, h=video.videoHeight;
+      scanCanvas.width=w; scanCanvas.height=h;
+      scanCtx.drawImage(video,0,0,w,h);
+      if(window.jsQR){
+        var d=scanCtx.getImageData(0,0,w,h);
+        var code=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});
+        if(code&&code.data){handleScanResult(code.data);return;}
+      }
+    }
+    scanRaf=requestAnimationFrame(tick);
+  }
+  scanRaf=requestAnimationFrame(tick);
+}
+
+// Photo capture fallback — works for ALL barcode types via iOS Vision
+function scanFromPhoto(input){
+  var file=input.files&&input.files[0];
+  if(!file)return;
+  setScanStatus('Processing image…');
+  var img=new Image();
+  var url=URL.createObjectURL(file);
+  img.onload=function(){
+    if(!scanCanvas){
+      scanCanvas=document.createElement('canvas');
+      scanCtx=scanCanvas.getContext('2d',{willReadFrequently:true});
+    }
+    scanCanvas.width=img.width; scanCanvas.height=img.height;
+    scanCtx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    // Try jsQR on the image
+    if(window.jsQR){
+      var d=scanCtx.getImageData(0,0,img.width,img.height);
+      var code=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});
+      if(code&&code.data){handleScanResult(code.data);return;}
+    }
+    // If jsQR can't read it (1D barcode) — show paste prompt
+    setScanStatus('Could not read barcode automatically');
+    var pr=el('scan-paste-row');if(pr)pr.style.display='flex';
+    showToast('Tip: if the barcode text appears when you took the photo, copy and paste it below');
+  };
+  img.onerror=function(){setScanStatus('Could not load image');};
+  img.src=url;
+  // Reset input so same file can be selected again
+  input.value='';
+}
+
+function submitManual(){
+  var v=el('scan-manual-input');
+  if(!v||!v.value.trim()){showToast('Please enter the barcode value');return;}
+  handleScanResult(v.value.trim());
+}
+
+function handleScanResult(raw){
+  if(!raw||!scanTarget)return;
+  setScanStatus('Scanned!',true);
+  stopCam();
+  var gs1=parseGS1(raw);
+  var lot=gs1.lot||raw.trim();
+  var ref=gs1.gtin||'';
+  var expiry=gs1.expiry||'';
+  if(scanTarget==='implant'){
+    var le=el('f-lot'),re=el('f-ref');
+    if(le)le.value=lot; if(re&&ref)re.value=ref;
+  } else if(scanTarget==='bone'){
+    var bl=el('f-blot'),br=el('f-bref');
+    if(bl)bl.value=lot; if(br&&ref)br.value=ref;
+  } else if(scanTarget==='membrane'){
+    var ml=el('f-mlot'),mr=el('f-mref');
+    if(ml)ml.value=lot; if(mr&&ref)mr.value=ref;
+  } else if(scanTarget==='stock'){
+    var sl=el('se-lot'),sx=el('se-expiry');
+    if(sl)sl.value=lot; if(sx&&expiry)sx.value=expiry;
+  }
+  setTimeout(function(){
+    el('scan-modal').classList.remove('open');
+    scanActive=false;
+    scanTarget=null;
+    showToast('Filled: '+lot+(ref?' | Ref: '+ref:''));
+  },400);
+}
+
+function parseGS1(raw){
+  var r={lot:'',gtin:'',expiry:''};
+  var s=raw.replace(/^\]d2/,'').replace(/^\]C1/,'').replace(/^\]e0/,'').replace(/^\]Q3/,'');
+  var i=0;
+  while(i<s.length){
+    var a=s.substr(i,2);
+    if(a==='01'||a==='02'){r.gtin=s.substr(i+2,14);i+=16;}
+    else if(a==='10'){i+=2;var e=s.indexOf('\x1d',i);if(e<0)e=s.length;r.lot=s.substring(i,e);i=e+1;}
+    else if(a==='17'){var d=s.substr(i+2,6);var yy=d.substr(0,2),mm=d.substr(2,2),dd=d.substr(4,2);r.expiry=(parseInt(yy,10)<50?'20':'19')+yy+'-'+mm+'-'+(dd==='00'?'01':dd);i+=8;}
+    else if(a==='11'||a==='13'||a==='15'||a==='16'){i+=8;}
+    else if(a==='21'){i+=2;var e2=s.indexOf('\x1d',i);if(e2<0)e2=s.length;i=e2+1;}
+    else{var ng=s.indexOf('\x1d',i);if(ng>i){i=ng+1;}else{i++;}}
+  }
+  if(!r.lot&&!r.gtin&&raw.length<80)r.lot=raw.trim();
+  return r;
+}
+
+</script>
+</body>
+</html>
